@@ -1,0 +1,22 @@
+{
+    "recommendations": [
+        "tamasfe.even-better-toml",
+        "tekumara.typos-vscode",
+        "charliermarsh.ruff",
+        "codezombiech.gitignore",
+        "littlefoxteam.vscode-python-test-adapter",
+        "hbenl.vscode-test-explorer",
+        "kevinrose.vsc-python-indent",
+        "mosapride.zenkaku",
+        "ms-python.python",
+        "njpwerner.autodocstring",
+        "pkief.material-icon-theme",
+        "shardulm94.trailing-spaces",
+        "usernamehw.errorlens",
+        "ms-vscode.makefile-tools",
+        "cnshenj.vscode-task-manager"
+    ],
+    "unwantedRecommendations": [
+        "ms-python.autopep8"
+    ]
+}
