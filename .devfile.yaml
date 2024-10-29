@@ -21,7 +21,7 @@ commands:
   - id: pytest
     exec:
       component: runtime
-      commandLine: pytest
+      commandLine: pytest-3.12
   - id: client-list
     exec:
       component: runtime
