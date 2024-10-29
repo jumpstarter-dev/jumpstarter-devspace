@@ -1,0 +1,28 @@
+schemaVersion: 2.3.0
+metadata:
+  name: jumpstarter-devspace
+  icon: https://jumpstarter.dev/jumpstarter.svg
+  tags:
+    - Python
+    - Jumpstarter
+  language: Python
+projects:
+  - name: jumpstarter
+    git:
+      remotes:
+        origin: https://github.com/jumpstarter-dev/jumpstarter-devspace.git
+components:
+   - name: runtime
+     container:
+       image: quay.io/jumpstarter-dev/jumpstarter-devspace:latest
+       mountSources: true
+
+commands:
+  - id: pytest
+    exec:
+      component: runtime
+      commandLine: pytest
+  - id: client-list
+    exec:
+      component: runtime
+      commandLine: jmp client list 
