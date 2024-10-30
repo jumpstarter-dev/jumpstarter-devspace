@@ -14,7 +14,8 @@
         "shardulm94.trailing-spaces",
         "usernamehw.errorlens",
         "ms-vscode.makefile-tools",
-        "cnshenj.vscode-task-manager"
+        "cnshenj.vscode-task-manager",
+        "eamodio.gitlens"
     ],
     "unwantedRecommendations": [
         "ms-python.autopep8"
