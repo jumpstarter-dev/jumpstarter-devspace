@@ -17,7 +17,7 @@ components:
        image: quay.io/jumpstarter-dev/jumpstarter-devspace:0.5.0
        mountSources: true
 
-commands: 
+commands:
   - id: pytest
     exec:
       component: runtime
