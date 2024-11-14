@@ -14,10 +14,10 @@ projects:
 components:
    - name: runtime
      container:
-       image: quay.io/jumpstarter-dev/jumpstarter-devspace:latest
+       image: quay.io/jumpstarter-dev/jumpstarter-devspace:0.5.0
        mountSources: true
 
-commands:
+commands: 
   - id: pytest
     exec:
       component: runtime
@@ -26,14 +26,14 @@ commands:
   - id: client-list
     exec:
       component: runtime
-      commandLine: jmp client list
+      commandLine: jmp list
 
   - id: list-my-leases
     exec:
       component: runtime
-      commandLine: jmp client lease list default
+      commandLine: jmp lease list default
 
   - id: release-my-leases
     exec:
       component: runtime
-      commandLine: jmp client lease release default --all
+      commandLine: jmp lease release default --all
