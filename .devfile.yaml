@@ -11,7 +11,9 @@ projects:
     git:
       remotes:
         origin: https://github.com/jumpstarter-dev/jumpstarter-devspace.git
-        branch: rpi4-dutlink-example
+      checkoutFrom:
+        remote: origin
+        revision: rpi4-dutlink-example
 
 components:
    - name: runtime
