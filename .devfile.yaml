@@ -16,6 +16,9 @@ components:
      container:
        image: quay.io/jumpstarter-dev/jumpstarter-devspace:0.5.0
        mountSources: true
+     env: # use insecure TLS connection for now, you can remove this if your jumpstarter deployment has trusted TLS certs
+      - name: JUMPSTARTER_GRPC_INSECURE
+        value: "1"
 
 commands:
   - id: pytest
