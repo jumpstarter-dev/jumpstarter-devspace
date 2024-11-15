@@ -1,0 +1,5 @@
+*.raw
+*.zip
+*FAILED*
+./*.jpeg
+camera_*.jpeg

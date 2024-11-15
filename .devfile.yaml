@@ -11,17 +11,34 @@ projects:
     git:
       remotes:
         origin: https://github.com/jumpstarter-dev/jumpstarter-devspace.git
+
 components:
    - name: runtime
      container:
        image: quay.io/jumpstarter-dev/jumpstarter-devspace:0.5.0
        mountSources: true
+       env:
+        - name: JUMPSTARTER_GRPC_INSECURE
+          value: "1"
 
 commands:
+  - id: prepare-default-client
+    exec:
+      component: runtime
+      commandLine: jmp use default
+
   - id: pytest
     exec:
       component: runtime
       commandLine: pytest
+  - id: get-image
+    exec:
+      component: runtime
+      commandLine: |
+        cd /projects/jumpstarter
+        wget https://github.com/mangelajo/jumpstarter-test-images/raw/refs/heads/main/raspbian-minimal-console.zip
+        unzip raspbian-minimal-console.zip
+        rm raspbian-minimal-console.zip
 
   - id: client-list
     exec:
@@ -37,3 +54,7 @@ commands:
     exec:
       component: runtime
       commandLine: jmp lease release default --all
+
+#events:
+#  postStart:
+#    - prepare-default-client
