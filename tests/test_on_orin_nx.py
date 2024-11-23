@@ -13,6 +13,7 @@ from jumpstarter.testing.pytest import JumpstarterTest
 log = logging.getLogger(__file__)
 
 PROMPT = "root@localhost ~]#"
+SETPROMPT = "localhost # "
 _booted_and_logged = False
 
 
@@ -22,8 +23,8 @@ class TestOrinNx(JumpstarterTest):
     @pytest.fixture()
     def console(self, client):
         with PexpectAdapter(client=client.interface.console) as console:
-            if True:
-                console.logfile_read = sys.stdout.buffer
+            # if True:
+            #    console.logfile_read = sys.stdout.buffer
             yield console
 
     @pytest.fixture()
@@ -44,14 +45,15 @@ class TestOrinNx(JumpstarterTest):
         global _booted_and_logged
         if _booted_and_logged:
             return console
-        log.info("No booted console, booting")
+        log.info("The system isn't booted in console state, booting and logging in")
         client.interface.power.off()
         time.sleep(1)
         client.interface.storage.dut()
         client.interface.power.on()
         c = _wait_and_login(console, "root", "redhat")
         _booted_and_logged = True
-        log.info("A booted shell is ready")
+        log.info("The system is booted and logged in")
+        console.logfile_read = sys.stdout.buffer
         return c
 
     def test_setup_device(self, client, console):
@@ -63,34 +65,6 @@ class TestOrinNx(JumpstarterTest):
             pytest.exit("No image file found")
             return
         client.interface.storage.dut()
-        client.interface.power.on()
-        console.logfile_read = sys.stdout.buffer
-        # first boot on raspbian will take some time, we wait for the login
-        shell = _wait_and_login(console, "root", "redhat")
-        shell.sendline("")
-        # then power off the device
-        self._power_off(client, console)
-
-
-    def test_power_on_hdmi(self, client, video, console):
-        client.interface.storage.dut()
-        # check all the image snapshots through the rpi4 boot process
-        client.interface.power.on()
-        for i in range(300):
-            time.sleep(0.1)
-            sn = video.snapshot()
-            sn.save("video.jpeg")
-            #sn.save(f"image_{i}.jpeg")
-            try:
-                video.assert_snapshot("tests/test_booted_ok.jpeg")
-                break # once we see this, exit the loop
-            except AssertionError:
-                continue
-
-        sn = video.snapshot()
-        sn.save("video.jpeg")
-        video.assert_snapshot("tests/test_booted_ok.jpeg")
-        client.interface.power.off()
 
     def test_devices_nvidia(self, booted_shell):
         res, out = _cmd(booted_shell, 'find /dev -name "*nv*"')
@@ -113,14 +87,15 @@ class TestOrinNx(JumpstarterTest):
         assert res == 0
 
     def test_pull_cuda_samples(self, booted_shell):
-        res, out = _cmd(booted_shell, "podman pull quay.io/sroyer/jetpack-6-cuda-12.2-samples:latest")
+        res, out = _cmd(
+            booted_shell,
+            "podman pull quay.io/sroyer/jetpack-6-cuda-12.2-samples:latest",
+        )
         assert b"Writing manifest to image destination" in out
         assert res == 0
 
-
     def test_login_console_hdmi(self, shell, video):
-        video.assert_snapshot("tests/test_booted_ok.jpeg" ,1)
-
+        video.assert_snapshot("tests/test_booted_ok.jpeg", 1)
 
     def _power_off(self, client, console):
         global _booted_and_logged
@@ -142,35 +117,41 @@ def _wait_and_login(c, username, password, timeout=120):
     try:
         c.expect("login:", timeout=timeout)
     except pexpect.exceptions.TIMEOUT:
-        c.sendline("") # sometimes we could have had noisy kernel messages on the console
+        c.sendline(
+            ""
+        )  # sometimes we could have had noisy kernel messages on the console
         c.expect("login:", timeout=5)
     c.sendline(username)
     c.expect("Password:", timeout=120)
     c.sendline(password)
-    print("") # so the log does not overlap on top of the "Password:"
+
     log.info("Logged in")
     # 2 is critical (current, default, minimum, boot-time-default)
+    _cmd(c, 'export PS1="' + SETPROMPT + '"', prompt=PROMPT, newprompt=SETPROMPT)
     _cmd(c, 'sysctl -w kernel.printk="2 4 1 7"')
     _cmd(c, "stty rows 100 cols 200")
     return c
 
-def _cmd(c, cmd, timeout=240):
+
+def _cmd(c, cmd, timeout=240, prompt=SETPROMPT, newprompt=SETPROMPT):
     # wait for the prompt and send a command
     try:
         c.sendline("")
-        c.expect(PROMPT, timeout=10)
+        c.expect(prompt, timeout=10)
         try:
-            c.expect(PROMPT, timeout=1) # if we really had a waiting prompt, our sendline generated another
+            c.expect(
+                prompt, timeout=1
+            )  # if we really had a waiting prompt, our sendline generated another
         except pexpect.exceptions.TIMEOUT:
             pass
     except pexpect.exceptions.TIMEOUT:
-        log.warning("We timed out waiting for prompt %s", PROMPT)
+        log.warning("We timed out waiting for prompt %s", prompt)
         pass
 
     c.sendline(cmd)
 
     # wait for the prompt and try get the result
-    c.expect(PROMPT, timeout=timeout)
+    c.expect(newprompt, timeout=timeout)
     # save the console output
     output = c.before
 
@@ -183,7 +164,6 @@ def _cmd(c, cmd, timeout=240):
     finally:
         c.logfile_read = save
 
-    print("")
     res = c.after.decode().strip()
     parts = res.split(" ")
     assert parts[0] == "__CMDRESULT__:"
@@ -191,16 +171,22 @@ def _cmd(c, cmd, timeout=240):
     # process the command output and remove any trailing data, remove right until after the command
     cmd = bytearray(cmd, "utf-8")
     try:
-        output = output[output.index(cmd) + len(cmd):]
-        output = output[output.index(b"\n") + 1:]
+        output = output[output.index(cmd) + len(cmd) :]
+        output = output[output.index(b"\n") + 1 :]
     except ValueError:
         output = b""
 
     # look for the return carriage / new line and remove until then
     try:
-        output = output[output.index(b"\r") + 1:]
+        output = output[output.index(b"\r") + 1 :]
     except ValueError:
         output = b""
+
+    output_parts = output.split(b"\n")
+    if len(output_parts) > 1:
+        output_parts = output_parts[:-1]
+        output = b"\n".join(output_parts)
+    output = output.rstrip(b"\r")
 
     # at this point output holds exactly the command output
     # parts[1] contains the exit value of the called shell command
