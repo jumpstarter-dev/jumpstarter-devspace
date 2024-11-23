@@ -19,6 +19,10 @@ components:
    - name: runtime
      container:
        image: quay.io/jumpstarter-dev/jumpstarter-devspace:0.5.0
+       memoryLimit: 8Gbi
+       memoryRequest: 1Gbi
+       cpuRequest: 100m
+       cpuLimit: 8000m
        mountSources: true
        env:
         - name: JUMPSTARTER_GRPC_INSECURE
